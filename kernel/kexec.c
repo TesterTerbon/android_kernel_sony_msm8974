@@ -40,7 +40,7 @@
 #include <asm/sections.h>
 
 /* Per cpu memory for storing cpu states in case of system crash. */
-note_buf_t __percpu *crash_notes;
+//note_buf_t __percpu *crash_notes;
 
 /* vmcoreinfo stuff */
 static unsigned char vmcoreinfo_data[VMCOREINFO_BYTES];
@@ -1229,9 +1229,8 @@ void crash_save_cpu(struct pt_regs *regs, int cpu)
 	final_note(buf);
 }
 
-static int __init crash_notes_memory_init(void)
-{
-	/* Allocate memory for saving cpu registers. */
+/*static int __init crash_notes_memory_init(void)
+	Allocate memory for saving cpu registers.
 	crash_notes = alloc_percpu(note_buf_t);
 	if (!crash_notes) {
 		printk("Kexec: Memory allocation for saving cpu register"
@@ -1240,7 +1239,7 @@ static int __init crash_notes_memory_init(void)
 	}
 	return 0;
 }
-module_init(crash_notes_memory_init)
+module_init(crash_notes_memory_init)*/
 
 
 /*

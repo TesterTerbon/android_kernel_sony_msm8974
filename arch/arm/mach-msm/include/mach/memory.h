@@ -38,6 +38,9 @@
 *  SPARSEMEM and a 3G/1G VM split.
 */
 
+#define KEXEC_HB_PAGE_ADDR		UL(0x7B00000)
+#define END_MEM 			UL(0x7B00000)
+
 #if defined(CONFIG_ARCH_MSM7X30)
 
 #define EBI0_PHYS_OFFSET PHYS_OFFSET
