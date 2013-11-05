@@ -801,16 +801,20 @@ struct msmfb_metadata {
 #define MDP_BUF_SYNC_FLAG_WAIT	1
 
 struct mdp_buf_sync {
-	uint32_t flags;
-	uint32_t acq_fen_fd_cnt;
-	int *acq_fen_fd;
-	int *rel_fen_fd;
+ uint32_t flags;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ uint32_t acq_fen_fd_cnt;
+ uint32_t session_id;
+ int *acq_fen_fd;
+ int *rel_fen_fd;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int *retire_fen_fd;
 };
-
 struct mdp_async_blit_req_list {
-	struct mdp_buf_sync sync;
-	uint32_t count;
-	struct mdp_blit_req req[];
+ struct mdp_buf_sync sync;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ uint32_t count;
+ struct mdp_blit_req req[];
 };
 
 #define MDP_DISPLAY_COMMIT_OVERLAY	1
