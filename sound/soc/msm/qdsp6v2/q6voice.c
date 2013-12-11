@@ -850,23 +850,6 @@ static int voice_destroy_mvm_cvs_session(struct voice_data *v)
 		}
 	}
 
-	/* Unmap physical memory for calibration */
-	pr_debug("%s: cal_mem_handle %d\n", __func__,
-		 common.cal_mem_handle);
-
-	if (!is_other_session_active(v->session_id) &&
-					(common.cal_mem_handle != 0)) {
-		ret = voice_send_mvm_unmap_memory_physical_cmd(v,
-						common.cal_mem_handle);
-		if (ret < 0) {
-			pr_err("%s Fail at cal mem unmap %d\n",
-				   __func__, ret);
-
-			goto fail;
-		}
-		common.cal_mem_handle = 0;
-	}
-
 	if (is_voip_session(v->session_id) || v->voc_state == VOC_ERROR) {
 		/* Destroy CVS. */
 		pr_debug("%s: CVS destroy session\n", __func__);
@@ -900,6 +883,23 @@ static int voice_destroy_mvm_cvs_session(struct voice_data *v)
 		}
 		cvs_handle = 0;
 		voice_set_cvs_handle(v, cvs_handle);
+
+		/* Unmap physical memory for calibration */
+		pr_debug("%s: cal_mem_handle %d\n", __func__,
+			 common.cal_mem_handle);
+
+		if (!is_other_session_active(v->session_id) &&
+					    (common.cal_mem_handle != 0)) {
+			ret = voice_send_mvm_unmap_memory_physical_cmd(v,
+							common.cal_mem_handle);
+			if (ret < 0) {
+				pr_err("%s Fail at cal mem unmap %d\n",
+				       __func__, ret);
+
+				goto fail;
+			}
+			common.cal_mem_handle = 0;
+		}
 
 		/* Destroy MVM. */
 		pr_debug("MVM destroy session\n");

@@ -279,7 +279,7 @@ static void adreno_perfcounter_start(struct adreno_device *adreno_dev)
 }
 
 /**
- * adreno_perfcounter_read_group: Determine which countables are in counters
+ * adreno_perfcounter_read_group() - Determine which countables are in counters
  * @adreno_dev: Adreno device to configure
  * @reads: List of kgsl_perfcounter_read_groups
  * @count: Length of list
@@ -353,6 +353,61 @@ int adreno_perfcounter_read_group(struct adreno_device *adreno_dev,
 done:
 	kfree(list);
 	return ret;
+}
+
+/**
+ * adreno_perfcounter_get_groupid() - Get the performance counter ID
+ * @adreno_dev: Adreno device
+ * @name: Performance counter group name string
+ *
+ * Get the groupid based on the name and return this ID
+ */
+
+int adreno_perfcounter_get_groupid(struct adreno_device *adreno_dev,
+					const char *name)
+{
+
+	struct adreno_perfcounters *counters = adreno_dev->gpudev->perfcounters;
+	struct adreno_perfcount_group *group;
+	int i;
+
+	if (name == NULL)
+		return -EINVAL;
+
+	/* perfcounter get/put/query not allowed on a2xx */
+	if (adreno_is_a2xx(adreno_dev))
+		return -EINVAL;
+
+	for (i = 0; i < counters->group_count; ++i) {
+		group = &(counters->groups[i]);
+		if (!strcmp(group->name, name))
+			return i;
+	}
+
+	return -EINVAL;
+}
+
+/**
+ * adreno_perfcounter_get_name() - Get the group name
+ * @adreno_dev: Adreno device
+ * @groupid: Desired performance counter groupid
+ *
+ * Get the name based on the groupid and return it
+ */
+
+const char *adreno_perfcounter_get_name(struct adreno_device *adreno_dev,
+		unsigned int groupid)
+{
+	struct adreno_perfcounters *counters = adreno_dev->gpudev->perfcounters;
+
+	/* perfcounter get/put/query not allowed on a2xx */
+	if (adreno_is_a2xx(adreno_dev))
+		return NULL;
+
+	if (groupid >= counters->group_count)
+		return NULL;
+
+	return counters->groups[groupid].name;
 }
 
 /**
@@ -579,6 +634,7 @@ static void adreno_cleanup_pt(struct kgsl_device *device,
 
 	kgsl_mmu_unmap(pagetable, &device->memstore);
 
+	kgsl_mmu_unmap(pagetable, &adreno_dev->profile.shared_buffer);
 	kgsl_mmu_unmap(pagetable, &adreno_dev->pwron_fixup);
 
 	kgsl_mmu_unmap(pagetable, &device->mmu.setstate_memory);
@@ -598,6 +654,17 @@ static int adreno_setup_pt(struct kgsl_device *device,
 
 	if (!result)
 		result = kgsl_mmu_map_global(pagetable, &device->memstore);
+
+	if (!result)
+		result = kgsl_mmu_map_global(pagetable,
+			&adreno_dev->pwron_fixup);		
+
+	if (!result)
+		result = kgsl_mmu_map_global(pagetable, &device->memstore);
+
+	if (!result)
+	        result = kgsl_mmu_map_global(pagetable,
+					&adreno_dev->profile.shared_buffer);
 
 	if (!result)
 		result = kgsl_mmu_map_global(pagetable,
@@ -1639,8 +1706,8 @@ adreno_ocmem_gmem_free(struct adreno_device *adreno_dev)
 	if (adreno_dev->ocmem_hdl == NULL)
 		return;
 
-	if (!ocmem_free(OCMEM_GRAPHICS, adreno_dev->ocmem_hdl))
-		adreno_dev->ocmem_hdl = NULL;
+	ocmem_free(OCMEM_GRAPHICS, adreno_dev->ocmem_hdl);
+	adreno_dev->ocmem_hdl = NULL;
 }
 #else
 static int
@@ -1685,6 +1752,9 @@ adreno_probe(struct platform_device *pdev)
 		goto error_close_rb;
 
 	adreno_debugfs_init(device);
+	adreno_profile_init(device);
+
+	adreno_ft_init_sysfs(device);
 
 	adreno_ft_init_sysfs(device);
 
@@ -1715,6 +1785,7 @@ static int __devexit adreno_remove(struct platform_device *pdev)
 	adreno_dev = ADRENO_DEVICE(device);
 
 	adreno_coresight_remove(pdev);
+	adreno_profile_close(device);
 
 	kgsl_pwrscale_detach_policy(device);
 	kgsl_pwrscale_close(device);
@@ -3421,6 +3492,9 @@ static int adreno_suspend_context(struct kgsl_device *device)
 {
 	int status = 0;
 	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
+
+	/* process any profiling results that are available */
+	adreno_profile_process_results(device);
 
 	/* switch to NULL ctxt */
 	if (adreno_dev->drawctxt_active != NULL) {

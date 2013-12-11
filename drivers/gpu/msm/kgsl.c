@@ -522,7 +522,8 @@ int kgsl_context_init(struct kgsl_device_private *dev_priv,
 	context->device = dev_priv->device;
 	context->pagetable = dev_priv->process_priv->pagetable;
 	context->dev_priv = dev_priv;
-	context->pid = dev_priv->process_priv->pid;
+	context->pid = task_tgid_nr(current);
+	context->tid = task_pid_nr(current);
 
 	ret = kgsl_sync_timeline_create(context);
 	if (ret)
@@ -725,8 +726,6 @@ end:
 
 static int kgsl_resume_device(struct kgsl_device *device)
 {
-	int status = -EINVAL;
-
 	if (!device)
 		return -EINVAL;
 
@@ -734,14 +733,26 @@ static int kgsl_resume_device(struct kgsl_device *device)
 	mutex_lock(&device->mutex);
 	if (device->state == KGSL_STATE_SUSPEND) {
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_SLUMBER);
-		status = 0;
 		complete_all(&device->hwaccess_gate);
+	} else if (device->state != KGSL_STATE_INIT) {
+		/*
+		 * This is an error situation,so wait for the device
+		 * to idle and then put the device to SLUMBER state.
+		 * This will put the device to the right state when
+		 * we resume.
+		 */
+		if (device->state == KGSL_STATE_ACTIVE)
+			device->ftbl->idle(device);
+		kgsl_pwrctrl_request_state(device, KGSL_STATE_SLUMBER);
+		kgsl_pwrctrl_sleep(device);
+		KGSL_PWR_ERR(device,
+			"resume invoked without a suspend\n");
 	}
 	kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 
 	mutex_unlock(&device->mutex);
 	KGSL_PWR_WARN(device, "resume end\n");
-	return status;
+	return 0;
 }
 
 static int kgsl_suspend(struct device *dev)

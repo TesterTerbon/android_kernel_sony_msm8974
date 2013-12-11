@@ -1719,8 +1719,8 @@ static int dwc3_msm_suspend(struct dwc3_msm *mdwc)
 	}
 
 	dcp = ((mdwc->charger.chg_type == DWC3_DCP_CHARGER) ||
-	      (mdwc->charger.chg_type == DWC3_FLOATED_CHARGER) ||
-	      (mdwc->charger.chg_type == DWC3_PROPRIETARY_CHARGER));
+	      (mdwc->charger.chg_type == DWC3_PROPRIETARY_CHARGER) ||
+	      (mdwc->charger.chg_type == DWC3_FLOATED_CHARGER));
 	host_bus_suspend = mdwc->host_mode == 1;
 	host_ss_suspend = host_bus_suspend && host_ss_active;
 
@@ -1852,8 +1852,8 @@ static int dwc3_msm_resume(struct dwc3_msm *mdwc)
 	}
 
 	dcp = ((mdwc->charger.chg_type == DWC3_DCP_CHARGER) ||
-	      (mdwc->charger.chg_type == DWC3_FLOATED_CHARGER) ||
-	      (mdwc->charger.chg_type == DWC3_PROPRIETARY_CHARGER));
+	      (mdwc->charger.chg_type == DWC3_PROPRIETARY_CHARGER) ||
+	      (mdwc->charger.chg_type == DWC3_FLOATED_CHARGER));
 	host_bus_suspend = mdwc->host_mode == 1;
 
 	if (mdwc->lpm_flags & MDWC3_TCXO_SHUTDOWN) {

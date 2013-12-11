@@ -282,6 +282,10 @@ typedef void (*fxn)(u32 data);
 #define CMD_CLK_CTRL    0x0004
 #define CMD_REQ_NO_MAX_PKT_SIZE 0x0008
 
+#define DEFAULT_CMDS	0
+#define DETECTED_CMDS	1
+#define MAX_CMDS	2
+
 struct dcs_cmd_req {
 	struct dsi_cmd_desc *cmds;
 	int cmds_cnt;
@@ -338,14 +342,23 @@ struct mdss_panel_common_pdata {
 	int cabc_enabled;
 	struct dsi_panel_cmds cabc_early_on_cmds;
 	struct dsi_panel_cmds cabc_on_cmds;
+#ifdef CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL
+	struct dsi_panel_cmds cabc_off_cmds[MAX_CMDS];
+	struct dsi_panel_cmds cabc_late_off_cmds[MAX_CMDS];
+#else
 	struct dsi_panel_cmds cabc_off_cmds;
 	struct dsi_panel_cmds cabc_late_off_cmds;
+#endif	/* CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL */
 	struct dsi_panel_cmds cabc_deferred_on_cmds;
 
 	struct dsi_panel_cmds einit_cmds;
 	struct dsi_panel_cmds init_cmds;
 	struct dsi_panel_cmds on_cmds;
+#ifdef CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL
+	struct dsi_panel_cmds off_cmds[MAX_CMDS];
+#else
 	struct dsi_panel_cmds off_cmds;
+#endif	/* CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL */
 	struct dsi_panel_cmds id_read_cmds;
 	int (*panel_power_on) (struct mdss_panel_data *pdata, int enable);
 	int (*disp_on) (struct mdss_panel_data *pdata);
