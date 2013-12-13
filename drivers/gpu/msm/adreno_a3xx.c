@@ -3782,7 +3782,6 @@ static struct adreno_perfcount_group a3xx_perfcounter_groups[] = {
 	A3XX_PERFCOUNTER_GROUP(pwr),
 	A3XX_PERFCOUNTER_GROUP(vbif),
 	A3XX_PERFCOUNTER_GROUP(vbif_pwr),
-
 };
 
 static struct adreno_perfcounters a3xx_perfcounters = {

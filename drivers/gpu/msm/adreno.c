@@ -635,6 +635,7 @@ static void adreno_cleanup_pt(struct kgsl_device *device,
 	kgsl_mmu_unmap(pagetable, &device->memstore);
 
 	kgsl_mmu_unmap(pagetable, &adreno_dev->profile.shared_buffer);
+
 	kgsl_mmu_unmap(pagetable, &adreno_dev->pwron_fixup);
 
 	kgsl_mmu_unmap(pagetable, &device->mmu.setstate_memory);
@@ -651,13 +652,6 @@ static int adreno_setup_pt(struct kgsl_device *device,
 
 	if (!result)
 		result = kgsl_mmu_map_global(pagetable, &rb->memptrs_desc);
-
-	if (!result)
-		result = kgsl_mmu_map_global(pagetable, &device->memstore);
-
-	if (!result)
-		result = kgsl_mmu_map_global(pagetable,
-			&adreno_dev->pwron_fixup);		
 
 	if (!result)
 		result = kgsl_mmu_map_global(pagetable, &device->memstore);
@@ -1753,8 +1747,6 @@ adreno_probe(struct platform_device *pdev)
 
 	adreno_debugfs_init(device);
 	adreno_profile_init(device);
-
-	adreno_ft_init_sysfs(device);
 
 	adreno_ft_init_sysfs(device);
 
